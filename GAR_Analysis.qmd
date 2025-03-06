@@ -31,14 +31,15 @@ library(ggprism)
 ```{r}
 #| label: reading in CSV files
 
-PV_Counts = read.csv("Data_all_sets/PV_Counts_Normalized_Pixel_Based_Unblinded_all_sets.csv")
-PV_Counts_Organized = read.csv("Data_all_sets/PV_Counts_Normalized_Pixel_Based_Unblinded_Organized_all_sets.csv")
-PNN_Counts = read.csv("Data_all_sets/PNN_Counts_Normalized_Pixel_Based_Unblinded_all_sets.csv")
-PNN_Counts_Organized = read.csv("Data_all_sets/PNN_Counts_Normalized_Pixel_Based_Unblinded_Organized_all_sets.csv")
-Double_pos_Counts = read.csv("Data_all_sets/Double_Pos_Counts_Normalized_Pixel_Based_Unblinded_all_sets.csv")
-Double_pos_Counts_Organized = read.csv("Data_all_sets/Double_Pos_Counts_Normalized_Pixel_Based_Unblinded_Organized_all_sets.csv")
-Image_data = read.csv("Data_all_sets/Summary_all_sets.csv")
-Decoder = read.csv("Data_all_sets/Decoder_all_sets.csv")
+#PV_Counts = read.csv("Data_all_sets/PV_Counts_Normalized_Pixel_Based_Unblinded_all_sets.csv")
+#PV_Counts_Organized = read.csv("Data_all_sets/PV_Counts_Normalized_Pixel_Based_Unblinded_Organized_all_sets.csv")
+#PNN_Counts = read.csv("Data_all_sets/PNN_Counts_Normalized_Pixel_Based_Unblinded_all_sets.csv")
+#PNN_Counts_Organized = read.csv("Data_all_sets/PNN_Counts_Normalized_Pixel_Based_Unblinded_Organized_all_sets.csv")
+#Double_pos_Counts = read.csv("Data_all_sets/Double_Pos_Counts_Normalized_Pixel_Based_Unblinded_all_sets.csv")
+#Double_pos_Counts_Organized = read.csv("Data_all_sets/Double_Pos_Counts_Normalized_Pixel_Based_Unblinded_Organized_all_sets.csv")
+Image_data = read.csv("DATA/Summary_set1.csv")
+Image_data = read.csv("DATA/Summary_set2.csv")
+#Decoder = read.csv("Data_all_sets/Decoder_all_sets.csv")
 ```
 
 ```{r}
