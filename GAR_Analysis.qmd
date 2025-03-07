@@ -299,7 +299,7 @@ superplot_PV
 ```
 
 ```{r}
-modelagePV = lm(`Green.Puncta.Count` ~ `Age.P` + GT + Age:GT,
+modelagePV = lm(`Green.Puncta.Count` ~ `Age.P` + GT + Age.P:GT,
            data = Image_data1)
 summary(modelagePV)
 
@@ -312,7 +312,7 @@ library(multcompView)
 library(lsmeans)
 
 marginal = lsmeans(modelagePV,
-                   ~ Age)
+                   ~ `Age.P`)
 
 pairs(marginal,
       adjust="tukey")
@@ -320,8 +320,8 @@ pairs(marginal,
 
 ```{r}
 # PV statistics
-modelPV = lm(`Green Puncta Count` ~ Genotype,
-           data = Image_data_P29)
+modelPV = lm(`Green.Puncta.Count` ~ GT,
+           data = Image_data1)
 
 Anova(modelPV,
       type = "II")
@@ -334,7 +334,7 @@ library(multcompView)
 library(lsmeans)
 
 leastsquare = lsmeans(modelPV,
-                   pairwise ~ Genotype,
+                   pairwise ~ GT,
                    adjust="tukey")
 leastsquare$contrasts
 
@@ -343,18 +343,18 @@ leastsquare$contrasts
 ```{r}
 library(DescTools)
 
-DunnettTest(`Green Puncta Count` ~ Genotype,
-            data = Image_data_P29,
+DunnettTest(`Green.Puncta.Count` ~ GT,
+            data = Image_data1,
             control = "WT")
 ```
 
 ```{r}
 Image_data$Genotype_age <- paste(Image_data$Genotype, Image_data$Age)
-Image_data_P29 <- Image_data[Image_data$Age == "P29",]
+#Image_data_P29 <- Image_data[Image_data$Age.P == "29",]
 
-ReplicateAverages_PV <- Image_data_P29 |>
-  group_by(Genotype, Animal) |>
-  summarise(PV_avg = mean(`Green Puncta Count`))
+ReplicateAverages_PV <- Image_data1 |>
+  group_by(GT, Animal) |>
+  summarise(PV_avg = mean(`Green.Puncta.Count`))
 ReplicateAverages_PV
 
 # Calculates total averages
@@ -362,27 +362,27 @@ TotalAverages_PV <- ReplicateAverages_PV |>
   summarise(PV_avg_avg = mean(PV_avg))
 TotalAverages_PV
 
-TotalAverages_PV$Genotype <- factor(TotalAverages_PV$Genotype, levels = c("WT", "HET", "KO"))
-Image_data_P29$Genotype <- factor(Image_data_P29$Genotype, levels = c("WT", "HET", "KO"))
+TotalAverages_PV$GT <- factor(TotalAverages_PV$GT, levels = c("WT", "HET", "KO"))
+Image_data1$GT <- factor(Image_data1$GT, levels = c("WT", "HET", "KO"))
 
 # make p value dataframe based on results of lsmeans comparison
 df_p_val <- data.frame(
   group1 = c("HET", "WT", "HET"),
   group2 = c("KO", "KO", "WT"),
-  label = c("0.0938", "ns", "ns"),
+  label = c("ns", "ns", "0.0531"),
   y.position = c(110, 140, 125)
 )
 
 # Plots Superplot based on biological replicate averages
 superplot_PV <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data_P29, aes(x = Genotype, y = `Green Puncta Count`, color = Genotype), size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = `Green.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_PV, aes(x = Genotype, y = PV_avg_avg, fill = Genotype), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_PV, aes(x = GT, y = PV_avg_avg, fill = GT), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
   # Error bars for replicate averages
-  stat_summary(data = ReplicateAverages_PV, aes(x = Genotype, y = PV_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
+  stat_summary(data = ReplicateAverages_PV, aes(x = GT, y = PV_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
-  geom_point(data = ReplicateAverages_PV, aes(x = Genotype, y = PV_avg, color = Genotype), size = 4, alpha = 0.5) +
+  geom_point(data = ReplicateAverages_PV, aes(x = GT, y = PV_avg, color = GT), size = 4, alpha = 0.5) +
   # Theme and labels
   theme(
     legend.text = element_text(size = 6),
@@ -415,8 +415,8 @@ superplot_PV
 ```
 
 ```{r}
-modelPNN = lm(`Red Puncta Count` ~ Genotype,
-           data = Image_data_P29)
+modelPNN = lm(`Red.Puncta.Count` ~ GT,
+           data = Image_data1)
 
 Anova(modelPNN,
       type = "II")
@@ -429,7 +429,7 @@ library(multcompView)
 library(lsmeans)
 
 leastsquare = lsmeans(modelPNN,
-                   pairwise ~ Genotype,
+                   pairwise ~ GT,
                    adjust="tukey")
 
 leastsquare
@@ -438,16 +438,16 @@ leastsquare
 ```{r}
 library(DescTools)
 
-DunnettTest(`Red Puncta Count` ~ Genotype,
-            data = Image_data_P29,
+DunnettTest(`Red.Puncta.Count` ~ GT,
+            data = Image_data1,
             control = "WT")
 ```
 
 ```{r}
-Image_data_P29$Genotype <- factor(Image_data_P29$Genotype, levels = c("WT", "HET", "KO"))
-ReplicateAverages_WFA <- Image_data_P29 |>
-  group_by(Genotype, Animal) |>
-  summarise(WFA_avg = mean(`Red Puncta Count`))
+Image_data1$GT <- factor(Image_data1$GT, levels = c("WT", "HET", "KO"))
+ReplicateAverages_WFA <- Image_data1 |>
+  group_by(GT, Animal) |>
+  summarise(WFA_avg = mean(`Red.Puncta.Count`))
 ReplicateAverages_WFA
 
 # Calculates total averages
@@ -455,8 +455,8 @@ TotalAverages_WFA <- ReplicateAverages_WFA |>
   summarise(WFA_avg_avg = mean(WFA_avg))
 TotalAverages_WFA
 
-Image_data_P29$Genotype_age <- factor(Image_data_P29$Genotype_age, levels = c("WT P29",  "HET P29", "KO P29"))
-Image_data_P29
+Image_data1$Genotype_age <- factor(Image_data1$Genotype_age, levels = c("WT P29",  "HET P29", "KO P29"))
+Image_data1
 
 # make p value dataframe based on results of lsmeans comparison
 df_p_val <- data.frame(
@@ -469,13 +469,13 @@ df_p_val <- data.frame(
 # Plots Superplot based on biological replicate averages
 superplot_WFA <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data_P29, aes(x = Genotype, y = `Red Puncta Count`), color = "black", size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = `Red.Puncta.Count`), color = "black", size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_WFA, aes(x = Genotype, y = WFA_avg_avg, fill = Genotype), stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_WFA, aes(x = GT, y = WFA_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.5) +
   # Error bars for replicate averages
-  stat_summary(data = ReplicateAverages_WFA, aes(x = Genotype, y = WFA_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
+  stat_summary(data = ReplicateAverages_WFA, aes(x = GT, y = WFA_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
-  geom_point(data = ReplicateAverages_WFA, aes(x = Genotype, y = WFA_avg), color = "black", size = 4, alpha = 0.5) +
+  geom_point(data = ReplicateAverages_WFA, aes(x = GT, y = WFA_avg), color = "black", size = 4, alpha = 0.5) +
   # Theme and labels
   theme(
     legend.text = element_text(size = 6),
@@ -507,8 +507,8 @@ superplot_WFA
 ```
 
 ```{r}
-model_double_pos = lm(`Colocalized Puncta Count` ~ Genotype,
-           data = Image_data_P29)
+model_double_pos = lm(`Colocalized.Puncta.Count` ~ GT,
+           data = Image_data1)
 
 Anova(model_double_pos,
       type = "II")
@@ -521,7 +521,7 @@ library(multcompView)
 library(lsmeans)
 
 leastsquare = lsmeans(model_double_pos,
-                   pairwise ~ Genotype,
+                   pairwise ~ GT,
                    adjust = "tukey")
 
 leastsquare
@@ -530,16 +530,16 @@ leastsquare
 ```{r}
 library(DescTools)
 
-DunnettTest(`Colocalized Puncta Count` ~ Genotype,
-            data = Image_data_P29,
+DunnettTest(`Colocalized.Puncta.Count` ~ GT,
+            data = Image_data1,
             control = "WT")
 ```
 
 ```{r}
-Image_data_P29$Genotype <- factor(Image_data_P29$Genotype, levels = c("WT", "HET", "KO"))
-ReplicateAverages_double_pos <- Image_data_P29 |>
-  group_by(Genotype, Animal) |>
-  summarise(double_pos_avg = mean(`Colocalized Puncta Count`))
+Image_data1$Genotype <- factor(Image_data1$GT, levels = c("WT", "HET", "KO"))
+ReplicateAverages_double_pos <- Image_data1 |>
+  group_by(GT, Animal) |>
+  summarise(double_pos_avg = mean(`Colocalized.Puncta.Count`))
 ReplicateAverages_double_pos
 
 # Calculates total averages
@@ -547,27 +547,27 @@ TotalAverages_double_pos <- ReplicateAverages_double_pos |>
   summarise(double_pos_avg_avg = mean(double_pos_avg))
 TotalAverages_double_pos
 
-Image_data_P29$Genotype_age <- factor(Image_data_P29$Genotype_age, levels = c("WT P29",  "HET P29", "KO P29"))
-Image_data_P29
+Image_data1$Genotype_age <- factor(Image_data1$Genotype_age, levels = c("WT P29",  "HET P29", "KO P29"))
+Image_data1
 
 # make p value dataframe based on results of lsmeans comparison
 df_p_val <- data.frame(
   group1 = c("HET", "WT", "HET"),
   group2 = c("KO", "KO", "WT"),
   label = c("ns", "ns", "ns"),
-  y.position = c(25, 40, 32)
+  y.position = c(60, 70, 80)
 )
 
 # Plots Superplot based on biological replicate averages
 superplot_double_pos <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data_P29, aes(x = Genotype, y = `Colocalized Puncta Count`, color = Genotype), size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = `Colocalized.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_double_pos, aes(x = Genotype, y = double_pos_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_double_pos, aes(x = GT, y = double_pos_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
   # Error bars for replicate averages
-  stat_summary(data = ReplicateAverages_double_pos, aes(x = Genotype, y = double_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
+  stat_summary(data = ReplicateAverages_double_pos, aes(x = GT, y = double_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
-  geom_point(data = ReplicateAverages_double_pos, aes(x = Genotype, y = double_pos_avg, color = Genotype), size = 4, alpha = 0.5) +
+  geom_point(data = ReplicateAverages_double_pos, aes(x = GT, y = double_pos_avg, color = GT), size = 4, alpha = 0.5) +
   # Theme and labels
   theme(
     legend.text = element_text(size = 6),
@@ -592,17 +592,17 @@ superplot_double_pos <- ggplot() +
              #tip.length = c(0, 0),
              bracket.size = 1
              ) +
-  ylim(c(0, 45))
+  ylim(c(0, 110))
 
-ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_double_pos.png", width =5, height = 5)
+ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_double_pos.png", width =5, height = 8)
 
 superplot_double_pos
 ```
 
 ```{r}
-Image_data_P29$single_pos <- Image_data_P29$`Green Puncta Count` - Image_data_P29$`Colocalized Puncta Count`
-model_single_pos = lm(single_pos ~ Genotype,
-           data = Image_data_P29)
+Image_data1$single_pos <- Image_data1$`Green.Puncta.Count` - Image_data1$`Colocalized.Puncta.Count`
+model_single_pos = lm(single_pos ~ GT,
+           data = Image_data1)
 
 Anova(model_single_pos,
       type = "II")
@@ -616,7 +616,7 @@ library(multcompView)
 library(lsmeans)
 
 leastsquare = lsmeans(model_single_pos,
-                   pairwise ~ Genotype,
+                   pairwise ~ GT,
                    adjust = "tukey")
 
 leastsquare
@@ -643,11 +643,11 @@ ttest_KOvWT
 ```
 
 ```{r}
-Image_data_P29$Genotype <- factor(Image_data_P29$Genotype, levels = c("WT", "HET", "KO"))
-Image_data_P29$single_pos <- Image_data_P29$`Green Puncta Count` - Image_data_P29$`Colocalized Puncta Count`
+Image_data1$GT <- factor(Image_data1$GT, levels = c("WT", "HET", "KO"))
+Image_data1$single_pos <- Image_data1$`Green.Puncta.Count` - Image_data1$`Colocalized.Puncta.Count`
 
-ReplicateAverages_single_pos <- Image_data_P29 |>
-  group_by(Genotype, Animal) |>
+ReplicateAverages_single_pos <- Image_data1 |>
+  group_by(GT, Animal) |>
   summarise(single_pos_avg = mean(single_pos))
 ReplicateAverages_single_pos
 
@@ -656,27 +656,27 @@ TotalAverages_single_pos <- ReplicateAverages_single_pos |>
   summarise(single_pos_avg_avg = mean(single_pos_avg))
 TotalAverages_single_pos
 
-Image_data_P29$Genotype_age <- factor(Image_data_P29$Genotype_age, levels = c("WT P29",  "HET P29", "KO P29"))
-Image_data_P29
+Image_data1$Genotype_age <- factor(Image_data1$Genotype_age, levels = c("WT P29",  "HET P29", "KO P29"))
+Image_data1
 
 # make p value dataframe based on results of lsmeans comparison
 df_p_val <- data.frame(
   group1 = c("HET", "WT", "HET"),
   group2 = c("KO", "KO", "WT"),
-  label = c("0.0426", "0.1549", "ns"),
+  label = c("ns", "0.0243", "0.0062"),
   y.position = c(95, 125, 110)
 )
 
 # Plots Superplot based on biological replicate averages
 superplot_single_pos <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data_P29, aes(x = Genotype, y = (single_pos), color = Genotype), size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = (single_pos), color = GT), size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_single_pos, aes(x = Genotype, y = single_pos_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_single_pos, aes(x = GT, y = single_pos_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
   # Error bars for replicate averages
-  stat_summary(data = ReplicateAverages_single_pos, aes(x = Genotype, y = single_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
+  stat_summary(data = ReplicateAverages_single_pos, aes(x = GT, y = single_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
-  geom_point(data = ReplicateAverages_single_pos, aes(x = Genotype, y = single_pos_avg, color = Genotype), size = 4, alpha = 0.5) +
+  geom_point(data = ReplicateAverages_single_pos, aes(x = GT, y = single_pos_avg, color = GT), size = 4, alpha = 0.5) +
   # Theme and labels
   theme(
     legend.text = element_text(size = 6),
@@ -692,7 +692,6 @@ superplot_single_pos <- ggplot() +
   theme_prism(base_size = 26) +
   theme(legend.position = "bottom")+
   add_pvalue(df_p_val,
-             xmin = "group1",
              xmax = "group2",
              label = "label",
              y.position = "y.position",
