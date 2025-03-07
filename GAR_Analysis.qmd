@@ -469,9 +469,9 @@ df_p_val <- data.frame(
 # Plots Superplot based on biological replicate averages
 superplot_WFA <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data1, aes(x = GT, y = `Red.Puncta.Count`), color = "black", size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = `Red.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_WFA, aes(x = GT, y = WFA_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_WFA, aes(x = GT, y = WFA_avg_avg), fill = "lightgrey", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_WFA, aes(x = GT, y = WFA_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
