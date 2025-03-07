@@ -1,7 +1,7 @@
 ---
 title: "Ctnnd2 PNN and PV Data Analysis"
-author: "Gabi Sejourne"
-date: "01/17/2025"
+author: "Gabi Sejourne and Grace Richardson"
+date: "03/06/2025"
 editor: visual 
 execute: 
   echo: true 
@@ -37,8 +37,8 @@ library(ggprism)
 #PNN_Counts_Organized = read.csv("Data_all_sets/PNN_Counts_Normalized_Pixel_Based_Unblinded_Organized_all_sets.csv")
 #Double_pos_Counts = read.csv("Data_all_sets/Double_Pos_Counts_Normalized_Pixel_Based_Unblinded_all_sets.csv")
 #Double_pos_Counts_Organized = read.csv("Data_all_sets/Double_Pos_Counts_Normalized_Pixel_Based_Unblinded_Organized_all_sets.csv")
-Image_data1 = read.csv("DATA/Summary_set1.csv")
-Image_data2 = read.csv("DATA/Summary_set2.csv")
+Image_data1 = read.csv("MOD_DATA/Summary_set1.csv")
+Image_data2 = read.csv("MOD_DATA/Summary_set2.csv")
 Decoder = read.csv("DATA/Decoder_all_sets.csv")
 ```
 
@@ -223,24 +223,24 @@ pairs(marginal,
 ```{r}
 
 # Step 1: Split the string at " - " and take the second half
-Image_data1$Image <- sapply(strsplit(Image_data1$Image, " - "), function(x) x[2])
-Image_data1$Age <- str_extract(Image_data1$Image, "P\\d+")
-Image_data1$Animal <- str_extract(Image_data1$Image, "(?<=set[12]_)[A-Za-z0-9]+")
-Image_data1_decoded <- merge(Image_data, Decoder, by = "Animal")
-Image_data1 <- Image_data_decoded
+#Image_data1$Image <- sapply(strsplit(Image_data1$Image, " - "), function(x) x[2])
+#Image_data1$Age <- str_extract(Image_data1$Image, "P\\d+")
+#Image_data1$Animal <- str_extract(Image_data1$Image, "(?<=set[12]_)[A-Za-z0-9]+")
+#Image_data1_decoded <- merge(Image_data, Decoder, by = "Animal")
+#Image_data1 <- Image_data_decoded
 
 # calculate % PV+/PNN+ and PV+/PNN-
 Image_data1 <- Image_data1 |>
-  mutate(pct_coloc = (`Colocalized Puncta Count`/`Green Puncta Count`)) |>
-  mutate(pct_pvonly = (((`Green Puncta Count` - `Colocalized Puncta Count`)/`Green Puncta Count`)))
+  mutate(pct_coloc = (`Colocalized.Puncta.Count`/`Green.Puncta.Count`)) |>
+  mutate(pct_pvonly = (((`Green.Puncta.Count` - `Colocalized.Puncta.Count`)/`Green.Puncta.Count`)))
 
 #find set averages
 Image_data1 <- Image_data1 |>
-  group_by(Age) |>
-  mutate(PV_mean_age = mean(`Green Puncta Count`)) |>
-  mutate(single_pos_mean_age = mean(`Red Puncta Count`)) |>
-  mutate(coloc_mean_age = mean(`Colocalized Puncta Count`)) |>
-  mutate(pvonly_mean_age = mean(`Green Puncta Count` - `Colocalized Puncta Count`)) |>
+  group_by(Age.P) |>
+  mutate(PV_mean_age = mean(`Green.Puncta.Count`)) |>
+  mutate(single_pos_mean_age = mean(`Red.Puncta.Count`)) |>
+  mutate(coloc_mean_age = mean(`Colocalized.Puncta.Count`)) |>
+  mutate(pvonly_mean_age = mean(`Green.Puncta.Count` - `Colocalized.Puncta.Count`)) |>
   mutate(pct_coloc_mean_age = mean(pct_coloc)) |>
   mutate(pct_pvonly_mean_age = mean(pct_pvonly))
 
@@ -249,29 +249,29 @@ ages <- c("P29", "P30")
 ```
 
 ```{r}
-Image_data$Genotype_age <- paste(Image_data$Genotype, Image_data$Age)
+Image_data1$Genotype_age <- paste(Image_data1$GT, Image_data1$Age.P)
 
-ReplicateAverages_PV <- Image_data |>
+ReplicateAverages_PV <- Image_data1 |>
   group_by(Genotype_age, Animal) |>
-  summarise(PV_avg = mean(`Green Puncta Count`))
+  summarise(PV_avg = mean(`Green.Puncta.Count`))
 ReplicateAverages_PV
 
 # Calculates total averages
 TotalAverages_PV <- ReplicateAverages_PV |>
   summarise(PV_avg_avg = mean(PV_avg))
-TotalAverages_PV$Genotype = sapply(strsplit(TotalAverages_PV$Genotype_age, " "), function(x) x[1])
+TotalAverages_PV$GT = sapply(strsplit(TotalAverages_PV$Genotype_age, " "), function(x) x[1])
 TotalAverages_PV
-TotalAverages_PV$Genotype <- factor(TotalAverages_PV$Genotype, levels = c("WT", "HET", "KO"))
+TotalAverages_PV$GT <- factor(TotalAverages_PV$GT, levels = c("WT", "HET", "KO"))
 
-Image_data$Genotype_age <- factor(Image_data$Genotype_age, levels = c("WT P29",  "HET P29", "KO P29", "WT P30", "HET P30", "KO P30"))
-Image_data
+Image_data1$Genotype_age <- factor(Image_data1$Genotype_age, levels = c("WT P29",  "HET P29", "KO P29", "WT P30", "HET P30", "KO P30"))
+Image_data1
 
 # Plots Superplot based on biological replicate averages
 superplot_PV <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data, aes(x = Genotype_age, y = `Green Puncta Count`), color = "black", size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data1, aes(x = Genotype_age, y = `Green.Puncta.Count`), color = "black", size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_PV, aes(x = Genotype_age, y = PV_avg_avg, fill = Genotype), stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_PV, aes(x = Genotype_age, y = PV_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.5) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_PV, aes(x = Genotype_age, y = PV_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
@@ -299,8 +299,8 @@ superplot_PV
 ```
 
 ```{r}
-modelagePV = lm(`Green Puncta Count` ~ Age + Genotype + Age:Genotype,
-           data = Image_data)
+modelagePV = lm(`Green.Puncta.Count` ~ `Age.P` + GT + Age:GT,
+           data = Image_data1)
 summary(modelagePV)
 
 Anova(modelagePV,
