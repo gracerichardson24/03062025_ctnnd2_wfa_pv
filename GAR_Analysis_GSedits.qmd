@@ -125,6 +125,7 @@ superplot_PV <- ggplot() +
       x = ""
     ) + 
   theme_prism() + 
+  theme(legend.position = "bottom") +
   add_pvalue(df_p_val,
              xmin = "group1",
              xmax = "group2",
@@ -136,7 +137,7 @@ superplot_PV <- ggplot() +
              ) +
   ylim(c(0, 150))
 
-ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_pvalb.png", width = 7, height = 5)
+ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_pvalb.png", width = 7, height = 7)
 
 superplot_PV
 ```
@@ -219,6 +220,7 @@ superplot_WFA <- ggplot() +
       x = ""
     ) + 
   theme_prism()+ 
+  theme(legend.position = "bottom") +
   add_pvalue(df_p_val,
              xmin = "group1",
              xmax = "group2",
@@ -230,7 +232,7 @@ superplot_WFA <- ggplot() +
              ) +
   ylim(c(0, 150))
 
-ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_WFA.png", width = 7, height = 5)
+ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_WFA.png", width = 7, height = 7)
 
 superplot_WFA
 ```
