@@ -1,0 +1,512 @@
+---
+title: "Ctnnd2 PNN and PV Data Analysis"
+author: "Gabi Sejourne and Grace Richardson"
+date: "03/06/2025"
+editor: visual 
+execute: 
+  echo: true 
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+#| label: packages and data:
+
+#packages for statistical analysis
+if(!require(lsmeans)){install.packages("lsmeans")}
+if(!require(multcompView)){install.packages("multcompView")}
+if(!require(dplyr)){install.packages("dplyr")}
+if(!require(rcompanion)){install.packages("rcompanion")}
+if(!require(rcompanion)){install.packages("ggprism")}
+
+library(tidyverse)
+library(stringr)
+library(car)
+library(FSA)
+library(ggpubr)
+library(ggbeeswarm)
+library(ggprism)
+```
+
+```{r}
+#| label: reading in CSV files
+
+Image_data1 = read.csv("MOD_DATA/Summary_set1.csv")
+Image_data2 = read.csv("MOD_DATA/Summary_set2.csv")
+Decoder = read.csv("DATA/Decoder_all_sets.csv")
+```
+
+```{r}
+ReplicateAverages_PV <- Image_data1 |>
+  group_by(GT, Age.P, Animal) |>
+  summarise(PV_avg = mean(`Green.Puncta.Count`))
+ReplicateAverages_PV
+
+# Calculates total averages
+TotalAverages_PV <- ReplicateAverages_PV |>
+  summarise(PV_avg_avg = mean(PV_avg))
+TotalAverages_PV
+```
+
+```{r}
+# PV statistics
+modelPV = lm(PV_avg ~ GT,
+           data = ReplicateAverages_PV)
+
+Anova(modelPV,
+      type = "II")
+
+summary(modelPV)
+```
+
+```{r}
+library(multcompView)
+library(lsmeans)
+
+leastsquare = lsmeans(modelPV,
+                   pairwise ~ GT,
+                   adjust="tukey")
+leastsquare$contrasts
+
+```
+
+```{r}
+library(DescTools)
+
+DunnettTest(PV_avg ~ GT,
+            data = ReplicateAverages_PV,
+            control = "WT")
+```
+
+```{r}
+ReplicateAverages_PV <- Image_data1 |>
+  group_by(GT, Animal) |>
+  summarise(PV_avg = mean(`Green.Puncta.Count`))
+ReplicateAverages_PV
+
+# Calculates total averages
+TotalAverages_PV <- ReplicateAverages_PV |>
+  summarise(PV_avg_avg = mean(PV_avg))
+TotalAverages_PV
+
+TotalAverages_PV$GT <- factor(TotalAverages_PV$GT, levels = c("WT", "HET", "KO"))
+Image_data1$GT <- factor(Image_data1$GT, levels = c("WT", "HET", "KO"))
+
+# make p value dataframe based on results of lsmeans comparison
+df_p_val <- data.frame(
+  group1 = c("HET", "WT", "HET"),
+  group2 = c("KO", "KO", "WT"),
+  label = c("ns", "ns", "ns"),
+  y.position = c(110, 140, 125)
+)
+
+# Plots Superplot based on biological replicate averages
+superplot_PV <- ggplot() +
+  # Plot original data points with `Green Puncta Count`
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = `Green.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
+  # Bar plot for total averages
+  geom_bar(data = TotalAverages_PV, aes(x = GT, y = PV_avg_avg, fill = GT), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  # Error bars for replicate averages
+  stat_summary(data = ReplicateAverages_PV, aes(x = GT, y = PV_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
+  # Points for replicate averages
+  geom_point(data = ReplicateAverages_PV, aes(x = GT, y = PV_avg, color = GT), size = 4, alpha = 0.5) +
+  # Theme and labels
+  theme(
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8)
+  ) +
+  ggtitle("") + xlab("") + ylab("PV+ count normalized to set average") +
+  theme_prism() +
+    #scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    labs(
+      title = "PV counts",
+      y = "PV+ cells per ROI",
+      x = ""
+    ) + 
+  theme_prism() + 
+  add_pvalue(df_p_val,
+             xmin = "group1",
+             xmax = "group2",
+             label = "label",
+             y.position = "y.position",
+             label.size = 6,
+             #tip.length = c(0, 0),
+             bracket.size = 1
+             ) +
+  ylim(c(0, 150))
+
+ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_pvalb.png", width = 7, height = 5)
+
+superplot_PV
+```
+
+```{r}
+Image_data1$GT <- factor(Image_data1$GT, levels = c("WT", "HET", "KO"))
+
+ReplicateAverages_WFA <- Image_data1 |>
+  group_by(Age.P, GT, Animal) |>
+  summarise(WFA_avg = mean(`Red.Puncta.Count`))
+ReplicateAverages_WFA
+
+# Calculates total averages
+TotalAverages_WFA <- ReplicateAverages_WFA |>
+  summarise(WFA_avg_avg = mean(WFA_avg))
+TotalAverages_WFA
+
+
+```
+
+```{r}
+modelPNN = lm(WFA_avg ~ GT,
+           data = ReplicateAverages_WFA)
+
+Anova(modelPNN,
+      type = "II")
+
+summary(modelPNN)
+```
+
+```{r}
+library(multcompView)
+library(lsmeans)
+
+leastsquare = lsmeans(modelPNN,
+                   pairwise ~ GT,
+                   adjust="tukey")
+
+leastsquare
+```
+
+```{r}
+library(DescTools)
+
+DunnettTest(WFA_avg ~ GT,
+            data = ReplicateAverages_WFA,
+            control = "WT")
+```
+
+```{r}
+# make p value dataframe based on results of lsmeans comparison
+df_p_val <- data.frame(
+  group1 = c("HET", "WT", "HET"),
+  group2 = c("KO", "KO", "WT"),
+  label = c("ns", "ns", "ns"),
+  y.position = c(110, 140, 125)
+)
+
+# Plots Superplot based on biological replicate averages
+superplot_WFA <- ggplot() +
+  # Plot original data points with `Green Puncta Count`
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = `Red.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
+  # Bar plot for total averages
+  geom_bar(data = TotalAverages_WFA, aes(x = GT, y = WFA_avg_avg), fill = "lightgrey", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  # Error bars for replicate averages
+  stat_summary(data = ReplicateAverages_WFA, aes(x = GT, y = WFA_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
+  # Points for replicate averages
+  geom_point(data = ReplicateAverages_WFA, aes(x = GT, y = WFA_avg, color = GT), size = 4, alpha = 0.5) +
+  # Theme and labels
+  theme(
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8)
+  ) +
+  theme_prism() +
+    scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    labs(
+      title = "PNN counts",
+      y = "PNN+ cells per ROI",
+      x = ""
+    ) + 
+  theme_prism()+ 
+  add_pvalue(df_p_val,
+             xmin = "group1",
+             xmax = "group2",
+             label = "label",
+             y.position = "y.position",
+             label.size = 6,
+             #tip.length = c(0, 0),
+             bracket.size = 1
+             ) +
+  ylim(c(0, 150))
+
+ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_WFA.png", width = 7, height = 5)
+
+superplot_WFA
+```
+
+```{r}
+#Calculates replicate averages
+Image_data1$Genotype <- factor(Image_data1$GT, levels = c("WT", "HET", "KO"))
+ReplicateAverages_double_pos <- Image_data1 |>
+  group_by(Age.P, GT, Animal) |>
+  summarise(double_pos_avg = mean(`Colocalized.Puncta.Count`))
+ReplicateAverages_double_pos
+
+# Calculates total averages
+TotalAverages_double_pos <- ReplicateAverages_double_pos |>
+  summarise(double_pos_avg_avg = mean(double_pos_avg))
+TotalAverages_double_pos
+```
+
+```{r}
+model_double_pos = lm(double_pos_avg ~ GT,
+           data = ReplicateAverages_double_pos)
+
+Anova(model_double_pos,
+      type = "II")
+
+summary(model_double_pos)
+```
+
+```{r}
+library(multcompView)
+library(lsmeans)
+
+leastsquare = lsmeans(model_double_pos,
+                   pairwise ~ GT,
+                   adjust = "tukey")
+
+leastsquare
+```
+
+```{r}
+library(DescTools)
+
+DunnettTest(`Colocalized.Puncta.Count` ~ GT,
+            data = Image_data1,
+            control = "WT")
+```
+
+```{r}
+
+# make p value dataframe based on results of lsmeans comparison
+df_p_val <- data.frame(
+  group1 = c("HET", "WT", "HET"),
+  group2 = c("KO", "KO", "WT"),
+  label = c("ns", "ns", "ns"),
+  y.position = c(60, 70, 80)
+)
+
+# Plots Superplot based on biological replicate averages
+superplot_double_pos <- ggplot() +
+  # Plot original data points with `Green Puncta Count`
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = `Colocalized.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
+  # Bar plot for total averages
+  geom_bar(data = TotalAverages_double_pos, aes(x = GT, y = double_pos_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  # Error bars for replicate averages
+  stat_summary(data = ReplicateAverages_double_pos, aes(x = GT, y = double_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
+  # Points for replicate averages
+  geom_point(data = ReplicateAverages_double_pos, aes(x = GT, y = double_pos_avg, color = GT), size = 4, alpha = 0.5) +
+  # Theme and labels
+  theme(
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8)
+  ) +
+  theme_prism() +
+    #scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    labs(
+      title = "PV+/PNN+ counts",
+      y = "PV+/PNN+ cells per ROI",
+      x = ""
+    ) + 
+  theme_prism() + 
+  theme(legend.position = "bottom") +
+  add_pvalue(df_p_val,
+             xmin = "group1",
+             xmax = "group2",
+             label = "label",
+             y.position = "y.position",
+             label.size = 6,
+             #tip.length = c(0, 0),
+             bracket.size = 1
+             ) +
+  ylim(c(0, 90))
+
+ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_double_pos.png", width =7, height = 7)
+
+superplot_double_pos
+```
+
+```{r}
+Image_data1$single_pos <- Image_data1$`Green.Puncta.Count` -Image_data1$`Colocalized.Puncta.Count`
+
+ReplicateAverages_single_pos <- Image_data1 |>
+  group_by(Age.P, GT, Animal) |>
+  summarise(single_pos_avg = mean(single_pos))
+ReplicateAverages_single_pos
+
+# Calculates total averages
+TotalAverages_single_pos <- ReplicateAverages_single_pos |>
+  summarise(single_pos_avg_avg = mean(single_pos_avg))
+TotalAverages_single_pos
+```
+
+```{r}
+model_single_pos = lm(single_pos_avg ~ GT,
+           data = ReplicateAverages_single_pos)
+
+Anova(model_single_pos,
+      type = "II")
+
+summary(model_single_pos)
+```
+
+```{r}
+library(multcompView)
+library(lsmeans)
+
+leastsquare = lsmeans(model_single_pos,
+                   pairwise ~ GT,
+                   adjust = "tukey")
+
+leastsquare
+```
+
+```{r}
+library(DescTools)
+
+DunnettTest(single_pos_avg ~ GT,
+            data = ReplicateAverages_single_pos,
+            control = "WT")
+```
+
+```{r}
+# make p value dataframe based on results of lsmeans comparison with tukey posthoc
+df_p_val <- data.frame(
+  group1 = c("HET", "WT", "HET"),
+  group2 = c("KO", "KO", "WT"),
+  label = c("ns", "ns", "0.0893"),
+  y.position = c(95, 125, 110)
+)
+
+# Plots Superplot based on biological replicate averages
+superplot_single_pos <- ggplot() +
+  # Plot original data points with `Green Puncta Count`
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = (single_pos), color = GT), size = 2, alpha = 1/2) +
+  # Bar plot for total averages
+  geom_bar(data = TotalAverages_single_pos, aes(x = GT, y = single_pos_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  # Error bars for replicate averages
+  stat_summary(data = ReplicateAverages_single_pos, aes(x = GT, y = single_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
+  # Points for replicate averages
+  geom_point(data = ReplicateAverages_single_pos, aes(x = GT, y = single_pos_avg, color = GT), size = 4, alpha = 0.5) +
+  # Theme and labels
+  theme(
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8)
+  ) +
+    #scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    labs(
+      title = "PV+/PNN- counts",
+      y = "PV+/PNN- cells per ROI",
+      x = ""
+    ) + 
+  theme_prism(base_size = 26) +
+  theme(legend.position = "bottom")+
+  add_pvalue(df_p_val,
+             xmax = "group2",
+             label = "label",
+             y.position = "y.position",
+             label.size =10,
+             #tip.length = c(0, 0),
+             bracket.size = 1
+             ) +
+  ylim(c(0, 140))
+
+ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_single_pos.png", width =7, height = 7)
+
+superplot_single_pos
+```
+
+```{r}
+Image_data1$pct_double <-  100 * Image_data1$`Colocalized.Puncta.Count` / Image_data1$`Green.Puncta.Count`
+
+ReplicateAverages_pct_double <- Image_data1 |>
+  group_by(Age.P, GT, Animal) |>
+  summarise(pct_double_avg = mean(pct_double))
+ReplicateAverages_pct_double
+
+# Calculates total averages
+TotalAverages_pct_double <- ReplicateAverages_pct_double |>
+  summarise(pct_double_avg_avg = mean(pct_double_avg))
+TotalAverages_pct_double
+```
+
+```{r}
+model_pct_double = lm(pct_double_avg ~ GT,
+                      data = ReplicateAverages_pct_double)
+Anova(model_pct_double,
+      type = "II")
+
+summary(model_pct_double)
+```
+
+```{r}
+library(multcompView)
+library(lsmeans)
+
+leastsquare = lsmeans(model_pct_double,
+                   pairwise ~ GT,
+                   adjust = "tukey")
+
+leastsquare
+```
+
+```{r}
+library(DescTools)
+
+DunnettTest(pct_double_avg ~ GT,
+            data = ReplicateAverages_pct_double,
+            control = "WT")
+```
+
+```{r}
+# make p value dataframe based on results of lsmeans comparison with tukey posthoc
+df_p_val <- data.frame(
+  group1 = c("HET", "WT", "HET"),
+  group2 = c("KO", "KO", "WT"),
+  label = c("ns", "ns", "ns"),
+  y.position = c(95, 130, 115)
+)
+
+# Plots Superplot based on biological replicate averages
+superplot_pct_double <- ggplot() +
+  # Plot original data points with `Green Puncta Count`
+  geom_quasirandom(data = Image_data1, aes(x = GT, y = (pct_double), color = GT), size = 2, alpha = 1/2) +
+  # Bar plot for total averages
+  geom_bar(data = TotalAverages_pct_double, aes(x = GT, y = pct_double_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  # Error bars for replicate averages
+  stat_summary(data = ReplicateAverages_pct_double, aes(x = GT, y = pct_double_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
+  # Points for replicate averages
+  geom_point(data = ReplicateAverages_pct_double, aes(x = GT, y = pct_double_avg, color = GT), size = 4, alpha = 0.5) +
+  # Theme and labels
+  theme(
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8)
+  ) +
+    #scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    labs(
+      title = "% PV+ cells with PNN",
+      y = "% (PV+/PNN+) / PV+",
+      x = ""
+    ) + 
+  theme_prism(base_size = 26) +
+  theme(legend.position = "bottom")+
+  add_pvalue(df_p_val,
+             xmax = "group2",
+             label = "label",
+             y.position = "y.position",
+             label.size =10,
+             #tip.length = c(0, 0),
+             bracket.size = 1
+             ) +
+  ylim(c(0, 140))
+
+ggsave(filename = "./Plots_all_sets/p29_Ctnnd2_superplot_pct_double.png", width =7, height = 7)
+
+superplot_pct_double
+
+```
