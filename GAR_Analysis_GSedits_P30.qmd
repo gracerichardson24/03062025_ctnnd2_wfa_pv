@@ -32,7 +32,7 @@ library(ggprism)
 #| label: reading in CSV files
 
 Image_data1 = read.csv("MOD_DATA/Summary_set1.csv")
-Image_data2 = read.csv("MOD_DATA/Summary_set2.csv")
+Image_data2 = read.csv("MOD_DATA/Summary_set2and3.csv")
 Decoder = read.csv("DATA/Decoder_all_sets.csv")
 ```
 
