@@ -407,13 +407,13 @@ superplot_single_pos <- ggplot() +
       y = "PV+/PNN- cells per ROI",
       x = ""
     ) + 
-  theme_prism(base_size = 26) +
+  theme_prism() +
   theme(legend.position = "bottom")+
   add_pvalue(df_p_val,
              xmax = "group2",
              label = "label",
              y.position = "y.position",
-             label.size =10,
+             label.size =6,
              #tip.length = c(0, 0),
              bracket.size = 1
              ) +
