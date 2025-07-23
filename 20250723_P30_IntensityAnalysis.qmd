@@ -48,7 +48,7 @@ FluoData_set3 <- FluoData_set3 %>%
   mutate(
     animal = str_extract(Label, "\\d{5}_\\d"),
     sex = str_extract(Label, "\\d{5}_\\d([MF])") %>% str_sub(-1),
-    genotype = str_extract(Label, "(WT|KO|HET)"),
+    genotype = str_extract(Label, "(WT|HET|KO)"),
     slice = str_extract(Label, "s\\d") %>% str_remove("s") %>% as.integer(),
     hemisphere = str_extract(Label, "h\\d") %>% str_remove("h") %>% as.integer()
   )
@@ -85,6 +85,11 @@ summary(modelIntensity)
 
 Anova(modelIntensity,
       type = "II")
+
+leastsquareIntens3 = lsmeans(modelIntensity,
+                      pairwise ~ genotype,
+                      adjust="tukey")
+leastsquareIntens3
 ```
 
 ```{r}
@@ -108,18 +113,18 @@ intensity_mean_plot <- ggplot() +
     width = 0.2, color = "black"
   ) +
   geom_jitter(data = FluoData_Animal, aes(x = genotype, y = mean_Mean, color = genotype),
-              width = 0.2, size = 2, alpha = 0.9) +
-  geom_jitter(data = FluoData_set23_df, aes(x = genotype, y = Mean, color = animal),
-              width = 0.2, size = 0.5, alpha = 0.6) +
+              width = 0.2, size = 2, alpha = 1) +
+  geom_jitter(data = FluoData_set23_df, aes(x = genotype, y = Mean, color = genotype),
+              width = 0.2, size = 0.5, alpha = 0.3) +
   theme_minimal() +
   xlab(" ") +
-  ylab("Mean Intensity") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "bottom") +
+  ylab("Mean Intensity (Total WFA intensity)") +
+  theme(
+        legend.position = "hidden") +
   scale_x_discrete()
 
 # Save
-ggsave("Intensity_plot_mean.png", plot = intensity_mean_plot, width = 2, height = 4, dpi = 300)
+ggsave("Intensity_plot_mean.png", plot = intensity_mean_plot, width = 6, height = 4, dpi = 300)
 
 # Show
 intensity_mean_plot
@@ -166,20 +171,30 @@ intensity_intden_plot <- ggplot() +
     width = 0.2, color = "black"
   ) +
   geom_jitter(data = FluoData_Animal_IntDen, aes(x = genotype, y = mean_Intden, color = genotype),
-              width = 0.2, size = 2, alpha = 0.9) +
-  geom_jitter(data = FluoData_set23_df, aes(x = genotype, y = IntDen, color = animal),
-              width = 0.2, size = 0.5, alpha = 0.6) +
+              width = 0.2, size = 2, alpha = 1) +
+  geom_jitter(data = FluoData_set23_df, aes(x = genotype, y = IntDen, color = genotype),
+              width = 0.2, size = 0.5, alpha = 0.3) +
   theme_minimal() +
   xlab(" ") +
-  ylab("Integrated Density Intensity") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "bottom") +
+  ylab("Integrated Density (Per Cell WFA Intensity)") +
+  theme(
+        legend.position = "hidden") +
   scale_x_discrete()
 
 # Save
-ggsave("Intensity_plot_intden.png", plot = intensity_intden_plot, width = 2, height = 4, dpi = 300)
+ggsave("Intensity_plot_intden.png", plot = intensity_intden_plot, width = 6, height = 4, dpi = 300)
 
 # Show
 intensity_intden_plot
+
+```
+
+```{r}
+FluoData_Animal_counts <- FluoData_set23_df |>
+  group_by(genotype) |>
+  summarise(
+    animal_coloc_sum_total = sum(animal_coloc_sum, na.rm = TRUE),
+    .groups = "drop"
+  )
 
 ```
