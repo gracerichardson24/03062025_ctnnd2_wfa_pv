@@ -3,3 +3,183 @@ title: "20250723_P30_IntensityAnalysis"
 format: html
 ---
 
+```{r}
+if(!require(lsmeans)){install.packages("lsmeans")}
+if(!require(multcompView)){install.packages("multcompView")}
+if(!require(dplyr)){install.packages("dplyr")}
+if(!require(rcompanion)){install.packages("rcompanion")}
+if(!require(rcompanion)){install.packages("ggprism")}
+
+library(tidyverse)
+library(stringr)
+library(car)
+library(FSA)
+library(ggpubr)
+library(ggbeeswarm)
+library(ggprism)
+library(ragg)
+
+if(!require(psych)){install.packages("psych")}
+if(!require(FSA)){install.packages("FSA")}
+if(!require(lattice)){install.packages("lattice")}
+if(!require(lsr)){install.packages("lsr")}
+```
+
+```{r}
+
+FluoData_set2 = read.csv("DATA/freefloating_set2_C2_merged_data.csv")
+FluoData_set3 = read.csv("DATA/freefloating_set3_C2_merged_data.csv")
+
+```
+
+```{r}
+#| label: cleaning data, extracting information
+
+FluoData_set2 <- FluoData_set2 %>%
+  mutate(
+    animal = str_extract(Label, "\\d{5}_\\d"),
+    sex = str_extract(Label, "\\d{5}_\\d([MF])") %>% str_sub(-1),
+    genotype = str_extract(Label, "(WT|KO|HET)"),
+    slice = str_extract(Label, "s(\\d+)") %>% str_remove("s") %>% as.integer(),
+    hemisphere = str_extract(Label, "h(\\d+)") %>% str_remove("h") %>% as.integer()
+         )
+
+FluoData_set3 <- FluoData_set3 %>%
+  mutate(
+    animal = str_extract(Label, "\\d{5}_\\d"),
+    sex = str_extract(Label, "\\d{5}_\\d([MF])") %>% str_sub(-1),
+    genotype = str_extract(Label, "(WT|KO|HET)"),
+    slice = str_extract(Label, "s\\d") %>% str_remove("s") %>% as.integer(),
+    hemisphere = str_extract(Label, "h\\d") %>% str_remove("h") %>% as.integer()
+  )
+
+# Combine the two dataframes into one
+FluoData_set23_df <- bind_rows(FluoData_set2, FluoData_set3)
+
+# View the result
+print(FluoData_set23_df)
+
+# Optional: Save to CSV
+write_csv(FluoData_set23_df, "FluoData_set23_df.csv")
+
+
+FluoData_set23_df <- FluoData_set23_df %>%
+  add_count(animal, name = "animal_coloc_sum")
+
+```
+
+```{r}
+#creates dataframe where intensity is averaged over all images for each animal
+FluoData_Animal <- FluoData_set23_df %>%
+  group_by(animal, genotype) %>%
+  summarise(
+    mean_Mean = mean(Mean, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+```{r}
+modelIntensity = lm(`mean_Mean` ~ genotype,
+           data = FluoData_Animal)
+summary(modelIntensity)
+
+Anova(modelIntensity,
+      type = "II")
+```
+
+```{r}
+FluoData_Animal$genotype <- factor(FluoData_Animal$genotype, levels = c("WT","HET", "KO"))
+
+# Summary stats
+summary_df_Intens <- FluoData_Animal %>%
+  group_by(genotype) %>%
+  summarise(
+    MeanCount = mean(mean_Mean, na.rm = TRUE),
+    SEM = sd(mean_Mean, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+# Plot
+intensity_mean_plot <- ggplot() +
+  geom_col(data = summary_df_Intens, aes(x = genotype, y = MeanCount, fill = genotype), alpha = 0.4) +
+  geom_errorbar(
+    data = summary_df_Intens,
+    aes(x = genotype, y = MeanCount, ymin = MeanCount - SEM, ymax = MeanCount + SEM),
+    width = 0.2, color = "black"
+  ) +
+  geom_jitter(data = FluoData_Animal, aes(x = genotype, y = mean_Mean, color = genotype),
+              width = 0.2, size = 2, alpha = 0.9) +
+  geom_jitter(data = FluoData_set23_df, aes(x = genotype, y = Mean, color = animal),
+              width = 0.2, size = 0.5, alpha = 0.6) +
+  theme_minimal() +
+  xlab(" ") +
+  ylab("Mean Intensity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom") +
+  scale_x_discrete()
+
+# Save
+ggsave("Intensity_plot_mean.png", plot = intensity_mean_plot, width = 2, height = 4, dpi = 300)
+
+# Show
+intensity_mean_plot
+
+```
+
+```{r}
+
+FluoData_Animal_IntDen <- FluoData_set23_df %>%
+  group_by(animal, genotype) %>%
+  summarise(
+    mean_Intden = mean(IntDen, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+```{r}
+modelIntensity_Intden = lm(`mean_Intden` ~ genotype,
+           data = FluoData_Animal_IntDen)
+summary(modelIntensity_Intden)
+
+Anova(modelIntensity_Intden,
+      type = "II")
+```
+
+```{r}
+FluoData_Animal_IntDen$genotype <- factor(FluoData_Animal_IntDen$genotype, levels = c("WT","HET", "KO"))
+
+# Summary stats
+summary_df_Intden <- FluoData_Animal_IntDen %>%
+  group_by(genotype) %>%
+  summarise(
+    MeanCount = mean(mean_Intden, na.rm = TRUE),
+    SEM = sd(mean_Intden, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+# Plot
+intensity_intden_plot <- ggplot() +
+  geom_col(data = summary_df_Intden, aes(x = genotype, y = MeanCount, fill = genotype), alpha = 0.4) +
+  geom_errorbar(
+    data = summary_df_Intden,
+    aes(x = genotype, y = MeanCount, ymin = MeanCount - SEM, ymax = MeanCount + SEM),
+    width = 0.2, color = "black"
+  ) +
+  geom_jitter(data = FluoData_Animal_IntDen, aes(x = genotype, y = mean_Intden, color = genotype),
+              width = 0.2, size = 2, alpha = 0.9) +
+  geom_jitter(data = FluoData_set23_df, aes(x = genotype, y = IntDen, color = animal),
+              width = 0.2, size = 0.5, alpha = 0.6) +
+  theme_minimal() +
+  xlab(" ") +
+  ylab("Integrated Density Intensity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom") +
+  scale_x_discrete()
+
+# Save
+ggsave("Intensity_plot_intden.png", plot = intensity_intden_plot, width = 2, height = 4, dpi = 300)
+
+# Show
+intensity_intden_plot
+
+```
