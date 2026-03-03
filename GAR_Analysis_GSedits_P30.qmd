@@ -34,13 +34,15 @@ library(ggprism)
 Image_data1 = read.csv("MOD_DATA/Summary_set1.csv")
 Image_data2 = read.csv("MOD_DATA/Summary_set2and3.csv")
 Decoder = read.csv("DATA/Decoder_all_sets.csv")
+Image_data2 <- Image_data2 |>
+  filter(GT != "HET")
 ```
 
 ```{r}
 ReplicateAverages_PV <- Image_data2 |>
   group_by(GT, Age.P, Animal) |>
   summarise(PV_avg = mean(`Green.Puncta.Count`))
-ReplicateAverages_PV
+
 
 # Calculates total averages
 TotalAverages_PV <- ReplicateAverages_PV |>
@@ -79,67 +81,77 @@ DunnettTest(PV_avg ~ GT,
 ```
 
 ```{r}
+library(dplyr)
+library(ggplot2)
+my_colors <- c("WT" = "dodgerblue",
+               "KO" = "firebrick1")
+
+# Replicate (animal) averages within genotype
 ReplicateAverages_PV <- Image_data2 |>
   group_by(GT, Animal) |>
-  summarise(PV_avg = mean(`Green.Puncta.Count`))
-ReplicateAverages_PV
+  summarise(
+    PV_avg = mean(`Green.Puncta.Count`, na.rm = TRUE),
+    .groups = "drop"
+  )
 
-# Calculates total averages
+# Total averages per genotype (this is what you want for bars)
 TotalAverages_PV <- ReplicateAverages_PV |>
-  summarise(PV_avg_avg = mean(PV_avg))
-TotalAverages_PV
+  group_by(GT) |>
+  summarise(
+    PV_avg_avg = mean(PV_avg, na.rm = TRUE),
+    .groups = "drop"
+  )
 
-TotalAverages_PV$GT <- factor(TotalAverages_PV$GT, levels = c("WT", "HET", "KO"))
-Image_data2$GT <- factor(Image_data2$GT, levels = c("WT", "HET", "KO"))
-TotalAverages_PV$GT <- factor(TotalAverages_PV$GT, levels = c("WT", "HET", "KO"))
+# Set factor order ONCE (and only on objects that actually have GT)
+Image_data2 <- Image_data2 |>
+  mutate(GT = factor(GT, levels = c("WT", "KO")))
 
+ReplicateAverages_PV <- ReplicateAverages_PV |>
+  mutate(GT = factor(GT, levels = c("WT", "KO")))
 
-# make p value dataframe based on results of lsmeans comparison
-df_p_val <- data.frame(
-  group1 = c("HET", "WT", "HET"),
-  group2 = c("KO", "KO", "WT"),
-  label = c("ns", "ns", "ns"),
-  y.position = c(260, 290, 320)
-)
+TotalAverages_PV <- TotalAverages_PV |>
+  mutate(GT = factor(GT, levels = c("WT", "KO")))
 
-# Plots Superplot based on biological replicate averages
+# Plot
 superplot_PV <- ggplot() +
-  # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data2, aes(x = GT, y = `Green.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
-  # Bar plot for total averages
-  geom_bar(data = TotalAverages_PV, aes(x = GT, y = PV_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
-  # Error bars for replicate averages
-  stat_summary(data = ReplicateAverages_PV, aes(x = GT, y = PV_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
-  # Points for replicate averages
-  geom_point(data = ReplicateAverages_PV, aes(x = GT, y = PV_avg, color = GT), size = 4, alpha = 0.5) +
-  # Theme and labels
-  theme(
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8)
+  geom_quasirandom(
+    data = Image_data2,
+    aes(x = GT, y = `Green.Puncta.Count`, color = GT),
+    size = 2, alpha = 0.5
   ) +
-  ggtitle("") + xlab("") + ylab("PV+ count normalized to set average") +
+  geom_col(  # same as geom_bar(stat="identity"), a bit cleaner
+    data = TotalAverages_PV,
+    aes(x = GT, y = PV_avg_avg, fill = GT),
+    width = 0.8, alpha = 0.25
+  ) +
+  stat_summary(
+    data = ReplicateAverages_PV,
+    aes(x = GT, y = PV_avg),
+    fun.data = mean_se, geom = "errorbar",
+    width = 0.1, color = "black"
+  ) +
+  geom_point(
+    data = ReplicateAverages_PV,
+    aes(x = GT, y = PV_avg, color = GT),
+    size = 4, alpha = 0.5
+  ) +
+  scale_colour_manual(values = my_colors) +
+  scale_fill_manual(values = my_colors) +
+  labs(
+    title = "",
+    y = "PV+ cells per ROI",
+    x = ""
+  ) +
   theme_prism() +
-    #scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
-    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
-    labs(
-      title = "PV counts",
-      y = "PV+ cells per ROI",
-      x = ""
-    ) + 
-  theme_prism() + 
   theme(legend.position = "bottom") +
-  add_pvalue(df_p_val,
-             xmin = "group1",
-             xmax = "group2",
-             label = "label",
-             y.position = "y.position",
-             label.size = 6,
-             #tip.length = c(0, 0),
-             bracket.size = 1
-             ) +
-  ylim(c(0, 350))
+  coord_cartesian(ylim = c(0, 350))  # safer than ylim()
 
-ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_pvalb.png", width = 7, height = 7)
+# Save the correct plot
+ggsave(
+  filename = "./Plots_all_sets/p30_Ctnnd2_superplot_pvalb.png",
+  plot = superplot_PV,
+  width = 7, height = 7
+)
 
 superplot_PV
 ```
@@ -191,19 +203,13 @@ DunnettTest(WFA_avg ~ GT,
 
 ```{r}
 # make p value dataframe based on results of lsmeans comparison
-df_p_val <- data.frame(
-  group1 = c("HET", "WT", "HET"),
-  group2 = c("KO", "KO", "WT"),
-  label = c("ns", "ns", "ns"),
-  y.position = c(110, 140, 125)
-)
 
 # Plots Superplot based on biological replicate averages
 superplot_WFA <- ggplot() +
   # Plot original data points with `Green Puncta Count`
   geom_quasirandom(data = Image_data2, aes(x = GT, y = `Red.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_WFA, aes(x = GT, y = WFA_avg_avg), fill = "lightgrey", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_WFA, aes(x = GT, y = WFA_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.25) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_WFA, aes(x = GT, y = WFA_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
@@ -214,24 +220,15 @@ superplot_WFA <- ggplot() +
     legend.title = element_text(size = 8)
   ) +
   theme_prism() +
-    scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
-    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    scale_fill_manual(values = c("dodgerblue", "firebrick1")) +
+    scale_colour_manual(values = c("dodgerblue", "firebrick1")) +
     labs(
-      title = "PNN counts",
+      title = "",
       y = "PNN+ cells per ROI",
       x = ""
     ) + 
   theme_prism()+ 
   theme(legend.position = "bottom") +
-  add_pvalue(df_p_val,
-             xmin = "group1",
-             xmax = "group2",
-             label = "label",
-             y.position = "y.position",
-             label.size = 6,
-             #tip.length = c(0, 0),
-             bracket.size = 1
-             ) +
   ylim(c(0, 150))
 
 ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_WFA.png", width = 7, height = 7)
@@ -285,19 +282,13 @@ DunnettTest(`Colocalized.Puncta.Count` ~ GT,
 ```{r}
 
 # make p value dataframe based on results of lsmeans comparison
-df_p_val <- data.frame(
-  group1 = c("HET", "WT", "HET"),
-  group2 = c("KO", "KO", "WT"),
-  label = c("ns", "ns", "ns"),
-  y.position = c(90, 100, 110)
-)
 
 # Plots Superplot based on biological replicate averages
 superplot_double_pos <- ggplot() +
   # Plot original data points with `Green Puncta Count`
   geom_quasirandom(data = Image_data2, aes(x = GT, y = `Colocalized.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_double_pos, aes(x = GT, y = double_pos_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_double_pos, aes(x = GT, y = double_pos_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.25) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_double_pos, aes(x = GT, y = double_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
@@ -309,23 +300,15 @@ superplot_double_pos <- ggplot() +
   ) +
   theme_prism() +
     #scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
-    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    scale_colour_manual(values = my_colors) +
+    scale_fill_manual(values = my_colors) +
     labs(
-      title = "PV+/PNN+ counts",
+      title = "",
       y = "PV+/PNN+ cells per ROI",
       x = ""
     ) + 
   theme_prism() + 
   theme(legend.position = "bottom") +
-  add_pvalue(df_p_val,
-             xmin = "group1",
-             xmax = "group2",
-             label = "label",
-             y.position = "y.position",
-             label.size = 6,
-             #tip.length = c(0, 0),
-             bracket.size = 1
-             ) +
   ylim(c(0, 150))
 
 ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_double_pos.png", width =7, height = 7)
@@ -378,19 +361,13 @@ DunnettTest(single_pos_avg ~ GT,
 
 ```{r}
 # make p value dataframe based on results of lsmeans comparison with tukey posthoc
-df_p_val <- data.frame(
-  group1 = c("HET", "WT", "HET"),
-  group2 = c("KO", "KO", "WT"),
-  label = c("ns", "ns", "ns"),
-  y.position = c(190, 200, 170)
-)
 
 # Plots Superplot based on biological replicate averages
 superplot_single_pos <- ggplot() +
   # Plot original data points with `Green Puncta Count`
   geom_quasirandom(data = Image_data2, aes(x = GT, y = (single_pos), color = GT), size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_single_pos, aes(x = GT, y = single_pos_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_single_pos, aes(x = GT, y = single_pos_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.25) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_single_pos, aes(x = GT, y = single_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
@@ -401,7 +378,8 @@ superplot_single_pos <- ggplot() +
     legend.title = element_text(size = 8)
   ) +
     #scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
-    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    scale_colour_manual(values = my_colors) +
+    scale_fill_manual(values = my_colors) +
     labs(
       title = "PV+/PNN- counts",
       y = "PV+/PNN- cells per ROI",
@@ -409,14 +387,6 @@ superplot_single_pos <- ggplot() +
     ) + 
   theme_prism() +
   theme(legend.position = "bottom")+
-  add_pvalue(df_p_val,
-             xmax = "group2",
-             label = "label",
-             y.position = "y.position",
-             label.size =6,
-             #tip.length = c(0, 0),
-             bracket.size = 1
-             ) +
   ylim(c(0, 220))
 
 ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_single_pos.png", width =7, height = 7)
@@ -468,19 +438,13 @@ DunnettTest(pct_double_avg ~ GT,
 
 ```{r}
 # make p value dataframe based on results of lsmeans comparison with tukey posthoc
-df_p_val <- data.frame(
-  group1 = c("HET", "WT", "HET"),
-  group2 = c("KO", "KO", "WT"),
-  label = c("ns", "ns", "ns"),
-  y.position = c(60, 70, 90)
-)
 
 # Plots Superplot based on biological replicate averages
 superplot_pct_double <- ggplot() +
   # Plot original data points with `Green Puncta Count`
   geom_quasirandom(data = Image_data2, aes(x = GT, y = (pct_double), color = GT), size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_pct_double, aes(x = GT, y = pct_double_avg_avg), fill = "lightgray", color = "black", stat = "identity", width = 0.8, alpha = 0.5) +
+  geom_bar(data = TotalAverages_pct_double, aes(x = GT, y = pct_double_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.25) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_pct_double, aes(x = GT, y = pct_double_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
@@ -491,7 +455,8 @@ superplot_pct_double <- ggplot() +
     legend.title = element_text(size = 8)
   ) +
     #scale_fill_manual(values = c("dodgerblue", "purple", "firebrick1")) +
-    scale_colour_manual(values = c("dodgerblue", "purple", "firebrick1")) +
+    scale_colour_manual(values = my_colors) +
+    scale_fill_manual(values = my_colors) +
     labs(
       title = "% PV+ cells with PNN",
       y = "% (PV+/PNN+) / PV+",
@@ -499,14 +464,6 @@ superplot_pct_double <- ggplot() +
     ) + 
   theme_prism(base_size = 26) +
   theme(legend.position = "bottom")+
-  add_pvalue(df_p_val,
-             xmax = "group2",
-             label = "label",
-             y.position = "y.position",
-             label.size =10,
-             #tip.length = c(0, 0),
-             bracket.size = 1
-             ) +
   ylim(c(0, 140))
 
 ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_pct_double.png", width =7, height = 7)
