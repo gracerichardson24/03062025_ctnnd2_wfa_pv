@@ -3,3 +3,26 @@ title: "Lineplots"
 format: html
 ---
 
+```{r}
+#packages for statistical analysis
+if(!require(lsmeans)){install.packages("lsmeans")}
+if(!require(multcompView)){install.packages("multcompView")}
+if(!require(dplyr)){install.packages("dplyr")}
+if(!require(rcompanion)){install.packages("rcompanion")}
+if(!require(rcompanion)){install.packages("ggprism")}
+
+library(tidyverse)
+library(stringr)
+library(car)
+library(FSA)
+library(ggpubr)
+library(ggbeeswarm)
+library(ggprism)
+```
+
+```{r}
+Cell_data_2 = read.csv("DATA/freefloating_set2_C2_merged_data.csv")
+Cell_data3 = read.csv("DATA/freefloating_set3_C2_merged_data.csv")
+```
+
+

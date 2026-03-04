@@ -117,12 +117,12 @@ superplot_PV <- ggplot() +
   geom_quasirandom(
     data = Image_data2,
     aes(x = GT, y = `Green.Puncta.Count`, color = GT),
-    size = 2, alpha = 0.5
+    size = 2, width= 0.2, alpha = 0.5
   ) +
   geom_col(  # same as geom_bar(stat="identity"), a bit cleaner
     data = TotalAverages_PV,
     aes(x = GT, y = PV_avg_avg, fill = GT),
-    width = 0.8, alpha = 0.25
+    width = 0.2, alpha = 0.25
   ) +
   stat_summary(
     data = ReplicateAverages_PV,
@@ -133,7 +133,7 @@ superplot_PV <- ggplot() +
   geom_point(
     data = ReplicateAverages_PV,
     aes(x = GT, y = PV_avg, color = GT),
-    size = 4, alpha = 0.5
+    width = 0.2, size = 4, alpha = 0.5
   ) +
   scale_colour_manual(values = my_colors) +
   scale_fill_manual(values = my_colors) +
@@ -150,7 +150,7 @@ superplot_PV <- ggplot() +
 ggsave(
   filename = "./Plots_all_sets/p30_Ctnnd2_superplot_pvalb.png",
   plot = superplot_PV,
-  width = 7, height = 7
+  width = 4, height = 6
 )
 
 superplot_PV
@@ -207,13 +207,13 @@ DunnettTest(WFA_avg ~ GT,
 # Plots Superplot based on biological replicate averages
 superplot_WFA <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data2, aes(x = GT, y = `Red.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data2, aes(x = GT, y = `Red.Puncta.Count`, color = GT), width = 0.2, size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_WFA, aes(x = GT, y = WFA_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.25) +
+  geom_bar(data = TotalAverages_WFA, aes(x = GT, y = WFA_avg_avg, fill = GT), stat = "identity", width = 0.2, alpha = 0.25) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_WFA, aes(x = GT, y = WFA_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
-  geom_point(data = ReplicateAverages_WFA, aes(x = GT, y = WFA_avg, color = GT), size = 4, alpha = 0.5) +
+  geom_point(data = ReplicateAverages_WFA, aes(x = GT, y = WFA_avg, color = GT), width = 0.2, size = 4, alpha = 0.5) +
   # Theme and labels
   theme(
     legend.text = element_text(size = 6),
@@ -231,7 +231,7 @@ superplot_WFA <- ggplot() +
   theme(legend.position = "bottom") +
   ylim(c(0, 150))
 
-ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_WFA.png", width = 7, height = 7)
+ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_WFA.png", width = 4, height = 6)
 
 superplot_WFA
 ```
@@ -286,13 +286,13 @@ DunnettTest(`Colocalized.Puncta.Count` ~ GT,
 # Plots Superplot based on biological replicate averages
 superplot_double_pos <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data2, aes(x = GT, y = `Colocalized.Puncta.Count`, color = GT), size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data2, aes(x = GT, y = `Colocalized.Puncta.Count`, color = GT), width = 0.2, size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_double_pos, aes(x = GT, y = double_pos_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.25) +
+  geom_bar(data = TotalAverages_double_pos, aes(x = GT, y = double_pos_avg_avg, fill = GT), stat = "identity", width = 0.2, alpha = 0.25) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_double_pos, aes(x = GT, y = double_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
-  geom_point(data = ReplicateAverages_double_pos, aes(x = GT, y = double_pos_avg, color = GT), size = 4, alpha = 0.5) +
+  geom_point(data = ReplicateAverages_double_pos, aes(x = GT, y = double_pos_avg, color = GT), width = 0.2, size = 4, alpha = 0.5) +
   # Theme and labels
   theme(
     legend.text = element_text(size = 6),
@@ -311,7 +311,7 @@ superplot_double_pos <- ggplot() +
   theme(legend.position = "bottom") +
   ylim(c(0, 150))
 
-ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_double_pos.png", width =7, height = 7)
+ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_double_pos.png", width =4, height = 6)
 
 superplot_double_pos
 ```
@@ -365,13 +365,13 @@ DunnettTest(single_pos_avg ~ GT,
 # Plots Superplot based on biological replicate averages
 superplot_single_pos <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data2, aes(x = GT, y = (single_pos), color = GT), size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data2, aes(x = GT, y = (single_pos), color = GT), width = 0.2, size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_single_pos, aes(x = GT, y = single_pos_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.25) +
+  geom_bar(data = TotalAverages_single_pos, aes(x = GT, y = single_pos_avg_avg, fill = GT), stat = "identity", width = 0.2, alpha = 0.25) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_single_pos, aes(x = GT, y = single_pos_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
-  geom_point(data = ReplicateAverages_single_pos, aes(x = GT, y = single_pos_avg, color = GT), size = 4, alpha = 0.5) +
+  geom_point(data = ReplicateAverages_single_pos, aes(x = GT, y = single_pos_avg, color = GT), width = 0.2, size = 4, alpha = 0.5) +
   # Theme and labels
   theme(
     legend.text = element_text(size = 6),
@@ -381,7 +381,7 @@ superplot_single_pos <- ggplot() +
     scale_colour_manual(values = my_colors) +
     scale_fill_manual(values = my_colors) +
     labs(
-      title = "PV+/PNN- counts",
+      title = "",
       y = "PV+/PNN- cells per ROI",
       x = ""
     ) + 
@@ -389,7 +389,7 @@ superplot_single_pos <- ggplot() +
   theme(legend.position = "bottom")+
   ylim(c(0, 220))
 
-ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_single_pos.png", width =7, height = 7)
+ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_single_pos.png", width =4, height = 6)
 
 superplot_single_pos
 ```
@@ -442,13 +442,13 @@ DunnettTest(pct_double_avg ~ GT,
 # Plots Superplot based on biological replicate averages
 superplot_pct_double <- ggplot() +
   # Plot original data points with `Green Puncta Count`
-  geom_quasirandom(data = Image_data2, aes(x = GT, y = (pct_double), color = GT), size = 2, alpha = 1/2) +
+  geom_quasirandom(data = Image_data2, aes(x = GT, y = (pct_double), color = GT), width = 0.2, size = 2, alpha = 1/2) +
   # Bar plot for total averages
-  geom_bar(data = TotalAverages_pct_double, aes(x = GT, y = pct_double_avg_avg, fill = GT), stat = "identity", width = 0.8, alpha = 0.25) +
+  geom_bar(data = TotalAverages_pct_double, aes(x = GT, y = pct_double_avg_avg, fill = GT), stat = "identity", width = 0.2, alpha = 0.25) +
   # Error bars for replicate averages
   stat_summary(data = ReplicateAverages_pct_double, aes(x = GT, y = pct_double_avg), fun.data = mean_se, geom = "errorbar", width = 0.1, color = "black") +
   # Points for replicate averages
-  geom_point(data = ReplicateAverages_pct_double, aes(x = GT, y = pct_double_avg, color = GT), size = 4, alpha = 0.5) +
+  geom_point(data = ReplicateAverages_pct_double, aes(x = GT, y = pct_double_avg, color = GT), width = 0.2, size = 4, alpha = 0.5) +
   # Theme and labels
   theme(
     legend.text = element_text(size = 6),
@@ -458,15 +458,15 @@ superplot_pct_double <- ggplot() +
     scale_colour_manual(values = my_colors) +
     scale_fill_manual(values = my_colors) +
     labs(
-      title = "% PV+ cells with PNN",
+      title = "",
       y = "% (PV+/PNN+) / PV+",
       x = ""
     ) + 
   theme_prism(base_size = 26) +
   theme(legend.position = "bottom")+
-  ylim(c(0, 140))
+  ylim(c(0, 100))
 
-ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_pct_double.png", width =7, height = 7)
+ggsave(filename = "./Plots_all_sets/p30_Ctnnd2_superplot_pct_double.png", width = 4, height = 6)
 
 superplot_pct_double
 
