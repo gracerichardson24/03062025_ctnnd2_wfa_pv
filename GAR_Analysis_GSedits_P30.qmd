@@ -44,7 +44,7 @@ Image_data2 <- Image_data2 |>
   PV_cell_density = (`Green.Puncta.Count` / 1242095.4) * 1000,
   WFA_cell_density = (`Red.Puncta.Count` / 1242095.4) * 1000,
   Coloc_cell_density = (`Colocalized.Puncta.Count` /1242095.4) * 1000,
-  single_pos_density = (single_pos/1242095.4) * 1000
+  single_pos_density = ((`Green.Puncta.Count` - `Colocalized.Puncta.Count`)/1242095.4) * 1000
   )
 
 ReplicateAverages_PV <- Image_data2 |>
@@ -123,7 +123,7 @@ superplot_PV <- ggplot() +
     aes(x = GT, y = PV_cell_density, color = GT),
     width = 0.2,
     size = 2,
-    alpha = 0.5
+    alpha = 0.2
   ) +
   geom_col(
     data = TotalAverages_PV,
@@ -221,7 +221,7 @@ superplot_WFA <- ggplot() +
     aes(x = GT, y = WFA_cell_density, color = GT),
     width = 0.2,
     size = 2,
-    alpha = 0.5
+    alpha = 0.2
   ) +
   geom_col(
     data = TotalAverages_WFA,
@@ -317,7 +317,7 @@ superplot_double_pos <- ggplot() +
     aes(x = GT, y = Coloc_cell_density, color = GT),
     width = 0.2,
     size = 2,
-    alpha = 0.5
+    alpha = 0.2
   ) +
   geom_col(
     data = TotalAverages_double_pos,
@@ -412,7 +412,7 @@ superplot_single_pos <- ggplot() +
     aes(x = GT, y = single_pos_density, color = GT),
     width = 0.2,
     size = 2,
-    alpha = 0.5
+    alpha = 0.2
   ) +
   geom_col(
     data = TotalAverages_single_pos,
@@ -506,7 +506,7 @@ superplot_pct_double <- ggplot() +
     aes(x = GT, y = pct_double, color = GT),
     width = 0.2,
     size = 2,
-    alpha = 0.5
+    alpha = 0.2
   ) +
   geom_col(
     data = TotalAverages_pct_double,
